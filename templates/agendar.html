@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agendar cita - Barby Rose</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+:root{--brand-font:'Cormorant Garamond', serif;}
+html,body,input,select,textarea,button,table,th,td,a,label,span,div,p,h1,h2,h3,h4,h5,h6{font-family:var(--brand-font) !important;letter-spacing:.01em;color:#442a37;}
+body{font-size:1.08rem;line-height:1.45;}
+input,select,textarea,button,a,th,td,label,p{font-size:1.08rem !important;}
+
+
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #fff0f6; margin: 0; padding: 0; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; }
+        .container { background-color: #ffffff; margin-top: 40px; padding: 30px 40px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 560px; }
+        h1 { text-align: center; color: #ff69b4; margin-bottom: 25px; font-size: 1.8em; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; color: #ff3399; }
+        input[type="text"], input[type="date"], input[type="time"], select {
+            width: 100%; padding: 10px 12px; margin-bottom: 16px; border: 2px solid #ffc0cb; border-radius: 8px; font-size: 1em; transition: 0.3s;
+        }
+        input:focus, select:focus { border-color: #ff69b4; outline: none; box-shadow: 0 0 5px rgba(255,105,180,0.5); }
+        .helper { margin: -8px 0 14px; font-size: 0.92em; color: #8a4b67; }
+        .helper.ok { color: #15803d; }
+        .helper.warn { color: #b45309; }
+        button { width: 100%; background-color: #ff69b4; color: #fff; border: none; padding: 12px; border-radius: 10px; font-size: 1.1em; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:hover { background-color: #ff85c1; }
+        a.back { display: block; text-align: center; margin-top: 20px; color: #ff3399; text-decoration: none; font-weight: 600; }
+        a.back:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Agendar Cita 💅</h1>
+
+    <form method="POST" id="form-agendar">
+        <label>Teléfono:</label>
+        <input type="text" name="telefono" id="telefono" placeholder="Ej: 3001234567" required>
+        <div id="telefono-helper" class="helper">Escribe el teléfono y el nombre se completará solo si la clienta ya existe.</div>
+
+        <label>Nombre de la clienta:</label>
+        <input type="text" name="nombre" id="nombre" placeholder="Se autocompleta si existe; si no, escríbelo" required>
+        <div id="nombre-helper" class="helper">Si el teléfono no existe, escribe el nombre para registrar la nueva clienta.</div>
+
+        <label>Servicio:</label>
+        <select name="servicio" required>
+            {% for servicio in servicios %}
+                <option value="{{ servicio[0] }}">{{ servicio[1] }} ({{ servicio[2] }} min)</option>
+            {% endfor %}
+        </select>
+
+        <label>Fecha:</label>
+        <input type="date" name="fecha" required min="{{ fecha_actual }}">
+
+        <label>Horario:</label>
+        <input type="time" name="horario" required>
+
+        <label>Empleada:</label>
+        <select name="empleada" required>
+            {% for emp in empleadas %}
+                <option value="{{ emp[0] }}">{{ emp[1] }}</option>
+            {% endfor %}
+        </select>
+
+        <button type="submit">Agendar</button>
+    </form>
+
+    <a class="back" href="{{ url_for('admin_panel') }}">← Volver al Panel</a>
+</div>
+
+<script>
+const telefonoInput = document.getElementById('telefono');
+const nombreInput = document.getElementById('nombre');
+const telefonoHelper = document.getElementById('telefono-helper');
+const nombreHelper = document.getElementById('nombre-helper');
+let ultimoTelefonoBuscado = '';
+
+async function buscarClienta() {
+    const telefono = telefonoInput.value.trim();
+    const normalizado = telefono.replace(/\D/g, '');
+
+    if (normalizado.length < 7 || normalizado === ultimoTelefonoBuscado) return;
+    ultimoTelefonoBuscado = normalizado;
+
+    try {
+        const resp = await fetch(`/buscar_clienta_por_telefono?telefono=${encodeURIComponent(telefono)}`);
+        const data = await resp.json();
+
+        if (data.ok && data.encontrada) {
+            nombreInput.value = data.nombre || '';
+            nombreInput.readOnly = true;
+            telefonoHelper.textContent = 'Clienta encontrada por teléfono.';
+            telefonoHelper.className = 'helper ok';
+            nombreHelper.textContent = 'Nombre autocompletado. Si quieres cambiarlo, borra el teléfono y vuelve a escribirlo correctamente.';
+            nombreHelper.className = 'helper ok';
+        } else {
+            nombreInput.readOnly = false;
+            if (!nombreInput.dataset.editadoManual) nombreInput.value = '';
+            telefonoHelper.textContent = 'No existe una clienta con ese teléfono.';
+            telefonoHelper.className = 'helper warn';
+            nombreHelper.textContent = 'Escribe el nombre para crear la nueva clienta al guardar la cita.';
+            nombreHelper.className = 'helper warn';
+        }
+    } catch (e) {
+        nombreInput.readOnly = false;
+    }
+}
+
+telefonoInput.addEventListener('blur', buscarClienta);
+telefonoInput.addEventListener('change', buscarClienta);
+nombreInput.addEventListener('input', () => {
+    nombreInput.dataset.editadoManual = nombreInput.value.trim() ? '1' : '';
+});
+</script>
+</body>
+</html>

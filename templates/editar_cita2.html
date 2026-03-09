@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<title>Editar cita</title>
+
+<style>
+:root{--brand-font:'Cormorant Garamond', serif;}
+html,body,input,select,textarea,button,table,th,td,a,label,span,div,p,h1,h2,h3,h4,h5,h6{font-family:var(--brand-font) !important;letter-spacing:.01em;color:#442a37;}
+body{font-size:1.08rem;line-height:1.45;}
+input,select,textarea,button,a,th,td,label,p{font-size:1.08rem !important;}
+
+
+
+body{
+font-family:Segoe UI;
+background:#ffe6f0;
+padding:40px;
+}
+
+.card{
+background:white;
+padding:30px;
+border-radius:15px;
+width:400px;
+margin:auto;
+box-shadow:0 10px 30px rgba(0,0,0,0.1);
+}
+
+h2{
+text-align:center;
+color:#d63384;
+}
+
+input,select{
+
+width:100%;
+padding:10px;
+margin-top:8px;
+margin-bottom:15px;
+border-radius:8px;
+border:1px solid #ccc;
+
+}
+
+button{
+
+background:#ff4d6d;
+color:white;
+border:none;
+padding:10px;
+width:100%;
+border-radius:10px;
+font-size:16px;
+cursor:pointer;
+
+}
+
+button:hover{
+
+background:#e03160;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="card">
+
+<h2>Editar cita</h2>
+
+<form method="POST" action="/actualizar_cita">
+
+<input type="hidden" name="id" value="{{ cita[0] }}">
+
+<label>Cliente</label>
+<input type="text" name="cliente" value="{{ cita[1] }}" required>
+
+<label>Servicio</label>
+<select name="servicio">
+
+{% for s in servicios %}
+
+<option value="{{ s }}"
+{% if cita[2]==s %}selected{% endif %}>
+{{ s }}
+</option>
+
+{% endfor %}
+
+</select>
+
+<label>Fecha</label>
+<input type="date" name="fecha" value="{{ cita[3] }}" required>
+
+<label>Hora</label>
+<select name="hora">
+
+{% for h in horas %}
+
+<option value="{{ h }}"
+{% if cita[4]==h %}selected{% endif %}>
+{{ h }}
+</option>
+
+{% endfor %}
+
+</select>
+
+<label>Empleada</label>
+<select name="empleada">
+
+{% for emp in empleadas %}
+
+<option value="{{ emp[0] }}"
+{% if cita[6]==emp[0] %}selected{% endif %}>
+{{ emp[0] }}
+</option>
+
+{% endfor %}
+
+</select>
+
+<button type="submit">Guardar cambios</button>
+
+</form>
+
+</div>
+
+</body>
+</html>

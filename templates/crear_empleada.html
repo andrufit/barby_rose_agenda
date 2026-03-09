@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crear Empleada - Barby Rose</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root{--brand-font:'Cormorant Garamond', serif;}
+html,body,input,select,textarea,button,table,th,td,a,label,span,div,p,h1,h2,h3,h4,h5,h6{font-family:var(--brand-font) !important;letter-spacing:.01em;color:#442a37;}
+body{font-size:1.08rem;line-height:1.45;}
+input,select,textarea,button,a,th,td,label,p{font-size:1.08rem !important;}
+
+
+    /* Reset básico para todos los elementos */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Poppins', sans-serif;
+        background-color: #FFF0F5;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        padding: 20px;
+    }
+
+    .card {
+        background-color: #fff;
+        padding: 35px 30px;
+        border-radius: 20px;
+        width: 100%;
+        max-width: 400px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    h2 {
+        text-align: center;
+        color: #E75480;
+        margin-bottom: 25px;
+    }
+
+    form {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    /* Contenedor para cada input y select */
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+    }
+
+    input, select {
+        width: 100%;
+        padding: 12px 15px;
+        font-size: 1rem;
+        border: 2px solid #F06C9B;
+        border-radius: 10px;
+        outline: none;
+        transition: all 0.3s;
+    }
+
+    input:focus, select:focus {
+        border-color: #E75480;
+        box-shadow: 0 0 6px rgba(240,108,155,0.3);
+    }
+
+    input::placeholder {
+        color: #FFB6C1;
+    }
+
+    button {
+        width: 100%;
+        padding: 12px;
+        border-radius: 12px;
+        border: none;
+        background-color: #F06C9B;
+        color: #fff;
+        font-weight: 600;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    button:hover {
+        background-color: #E75480;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .volver {
+        margin-top: 20px;
+        width: 100%;
+        text-align: center;
+    }
+
+    .volver a {
+        text-decoration: none;
+        color: #F06C9B;
+        font-weight: 600;
+    }
+
+    .volver a:hover {
+        color: #E75480;
+    }
+
+    /* Responsive */
+    @media (max-width: 450px) {
+        .card {
+            width: 90%;
+            padding: 25px 20px;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+        }
+
+        input, select, button {
+            font-size: 1rem;
+        }
+    }
+</style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Crear Empleada 💼</h2>
+
+    <form method="POST">
+        <div class="form-group">
+            <input type="text" name="nombre" placeholder="Nombre completo" required>
+        </div>
+        <div class="form-group">
+            <input type="password" name="password" placeholder="Contraseña (mín. 6 caracteres)" required minlength="6">
+        </div>
+        <div class="form-group">
+            <select name="rol" required>
+                <option value="" disabled selected>Selecciona un rol</option>
+                <option value="empleada">Empleada</option>
+                <option value="admin">Admin</option>
+            </select>
+        </div>
+        <button type="submit">Crear</button>
+    </form>
+
+    <div class="volver">
+        <a href="{{ url_for('admin_panel') }}">⬅️ Volver al panel</a>
+    </div>
+</div>
+
+</body>
+</html>

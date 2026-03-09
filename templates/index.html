@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Barby Rose Nail Spa</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--brand-font:'Cormorant Garamond', serif;}
+html,body,input,select,textarea,button,table,th,td,a,label,span,div,p,h1,h2,h3,h4,h5,h6{font-family:var(--brand-font) !important;letter-spacing:.01em;color:#442a37;}
+body{font-size:1.08rem;line-height:1.45;}
+input,select,textarea,button,a,th,td,label,p{font-size:1.08rem !important;}
+
+
+*{box-sizing:border-box;margin:0;padding:0} body{font-family:'Cormorant Garamond', serif;background:#fff0f5;color:#442a37}
+.hero{min-height:100vh;display:grid;grid-template-columns:1.1fr .9fr}.left{padding:48px;display:flex;flex-direction:column;justify-content:center;background:linear-gradient(180deg,#fff7fb 0%,#ffe8f1 100%)}
+.logo{max-width:420px;width:100%;margin-bottom:24px} h1{font-family:'Cormorant Garamond',serif;font-size:3.6rem;color:#b74474;margin-bottom:14px;line-height:1.02;font-weight:700} p{font-size:1.15rem;line-height:1.6;max-width:560px;margin-bottom:24px}
+.btn{display:inline-block;background:#d25b8d;color:white;padding:15px 28px;border-radius:14px;text-decoration:none;font-weight:700;box-shadow:0 10px 25px rgba(240,108,155,.25)} .btn:hover{background:#b74474}
+.meta{margin-top:18px;color:#5c3948;font-size:.95rem}.right{position:relative;min-height:420px}.right img{width:100%;height:100%;object-fit:cover}.overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(232,84,128,.18))}
+@media(max-width:900px){.hero{grid-template-columns:1fr}.right{min-height:320px;order:-1}.left{padding:28px}h1{font-size:2.9rem}.logo{max-width:320px}}
+</style>
+</head>
+<body>
+<div class="hero">
+<div class="left">
+<img class="logo" src="{{ url_for('static', filename='logo.png') }}" alt="Barby Rose Nail Spa">
+<h1>Bienvenida a Barby Rose Nail Spa 💅</h1>
+<p>Gestiona citas, clientas, empleadas y recordatorios de WhatsApp desde una aplicación elegante y práctica para el día a día del negocio.</p>
+<div><a class="btn" href="{{ url_for('login') }}">Iniciar sesión</a></div>
+<div class="meta">Armenia, Quindío · Cr 15 4N # 55 (Barrio Nueva Cecilia)</div>
+</div>
+<div class="right"><img src="{{ url_for('static', filename='local.jpg') }}" alt="Foto del lugar"><div class="overlay"></div></div>
+</div>
+</body>
+</html>

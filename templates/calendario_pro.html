@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>Calendario Profesional - Barby Rose</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+:root{--brand-font:'Cormorant Garamond', serif;}
+html,body,input,select,textarea,button,table,th,td,a,label,span,div,p,h1,h2,h3,h4,h5,h6{font-family:var(--brand-font) !important;letter-spacing:.01em;color:#442a37;}
+body{font-size:1.08rem;line-height:1.45;}
+input,select,textarea,button,a,th,td,label,p{font-size:1.08rem !important;}
+
+
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #ffe6f0;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #d63384;
+        }
+
+        form {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        input[type="date"], button {
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            background: #ff4d6d;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #e03160;
+        }
+
+        /* ===== CONTENEDOR ===== */
+        .calendar-wrapper {
+            display: flex;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+
+        /* ===== COLUMNA HORAS ===== */
+        .hora-columna {
+            width: 70px;
+            flex-shrink: 0;
+            border-right: 1px solid #ddd;
+        }
+
+        .hora-header {
+            height: 50px;
+        }
+
+        .hora {
+            height: 30px;
+            font-size: 12px;
+            color: #555;
+            padding-left: 5px;
+        }
+
+        /* ===== COLUMNA EMPLEADA ===== */
+        .empleada-col {
+            flex: 1;
+            min-width: 200px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            background: #ffc2d1;
+            color: #a61e4d;
+            border-left: 1px solid #f0f0f0;
+        }
+
+        /* ===== GRID PERFECTO ===== */
+        .columna {
+            position: relative;
+            height: 660px; /* 8AM - 7PM */
+            border-left: 1px solid #f0f0f0;
+
+            background:
+                repeating-linear-gradient(
+                    to bottom,
+                    #ffffff,
+                    #ffffff 29px,
+                    #e9e9e9 30px
+                );
+        }
+
+        /* Línea más gruesa cada hora */
+        .columna::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            height: 660px;
+            pointer-events: none;
+            background:
+                repeating-linear-gradient(
+                    to bottom,
+                    transparent,
+                    transparent 59px,
+                    rgba(0,0,0,0.08) 60px
+                );
+        }
+
+        /* ===== LÍNEA HORA ACTUAL ===== */
+        .linea-actual {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #ff1744;
+            z-index: 5;
+        }
+
+        /* ===== CITAS ===== */
+        .cita {
+            position: absolute;
+            left: 8px;
+            right: 8px;
+            background: linear-gradient(135deg, #ff85a2, #ff4d6d);
+            color: white;
+            border-radius: 12px;
+            padding: 8px;
+            font-size: 12px;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.15);
+            z-index: 3;
+        }
+
+        .cita:hover {
+            transform: scale(1.03);
+            cursor: pointer;
+        }
+
+        .volver {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .volver a {
+            background: #ff4d6d;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<h2>Calendario Profesional - {{ fecha }}</h2>
+
+<form method="GET">
+    <input type="date" name="fecha" value="{{ fecha }}">
+    <button type="submit">Ver día</button>
+</form>
+
+<div class="calendar-wrapper">
+
+    <!-- COLUMNA HORAS -->
+    <div class="hora-columna">
+
+        <div class="hora-header"></div>
+
+        {% for i in range(0, 22) %}
+            <div class="hora">
+                {{ (8 + (i // 2)) }}:{{ '00' if i % 2 == 0 else '30' }}
+            </div>
+        {% endfor %}
+
+    </div>
+
+    <!-- COLUMNAS EMPLEADAS -->
+    {% for emp in empleadas %}
+    <div class="empleada-col">
+
+        <div class="header">{{ emp[0] }}</div>
+
+        <div class="columna">
+
+            {% for cita in citas %}
+                {% if cita.empleada == emp[0] %}
+                    <div class="cita"
+                         style="top: {{ cita.top }}px;
+                                height: {{ cita.height }}px;">
+                        <strong>{{ cita.cliente }}</strong><br>
+                        {{ cita.servicio }}
+                    </div>
+                {% endif %}
+            {% endfor %}
+
+        </div>
+
+    </div>
+    {% endfor %}
+
+</div>
+
+<div class="volver">
+    <a href="{{ url_for('admin_panel') }}">Volver al Panel</a>
+</div>
+
+<!-- ===== SCRIPT HORA ACTUAL ===== -->
+<script>
+    const ahora = new Date();
+    const hora = ahora.getHours();
+    const minuto = ahora.getMinutes();
+
+    if (hora >= 8 && hora <= 19) {
+
+        const minutosDesde8 = (hora - 8) * 60 + minuto;
+        const top = minutosDesde8;
+
+        document.querySelectorAll(".columna").forEach(col => {
+
+            const linea = document.createElement("div");
+            linea.classList.add("linea-actual");
+            linea.style.top = top + "px";
+
+            col.appendChild(linea);
+        });
+
+        window.scrollTo({
+            top: top - 200,
+            behavior: "smooth"
+        });
+    }
+</script>
+
+</body>
+</html>

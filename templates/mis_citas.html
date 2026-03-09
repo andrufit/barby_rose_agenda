@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mis Citas - Barby Rose</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--brand-font:'Cormorant Garamond', serif;}
+html,body,input,select,textarea,button,table,th,td,a,label,span,div,p,h1,h2,h3,h4,h5,h6{font-family:var(--brand-font) !important;letter-spacing:.01em;color:#442a37;}
+body{font-size:1.08rem;line-height:1.45;}
+input,select,textarea,button,a,th,td,label,p{font-size:1.08rem !important;}
+
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Cormorant Garamond', serif;background:#fff5f8;color:#442a37;padding:24px}
+.header{max-width:1050px;margin:0 auto 20px;background:#fff;border-radius:24px;box-shadow:0 12px 30px rgba(216,129,161,.18);padding:24px;text-align:center}
+.logo{width:min(320px,85%);display:block;margin:0 auto 10px}
+h1{font-family:'Cormorant Garamond',serif;color:#b74474;font-size:3.2rem;line-height:1;margin-bottom:8px;font-weight:700}
+.subtitle{color:#5c3948}
+.card{max-width:1050px;margin:0 auto;background:#fff;border-radius:24px;box-shadow:0 12px 30px rgba(216,129,161,.18);padding:24px}
+.form-row{display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin-bottom:18px}.field{display:flex;flex-direction:column;gap:6px}.field label{color:#b74474;font-weight:700}input[type='date']{padding:12px 14px;border-radius:12px;border:1px solid #f1bfd1;min-width:220px;font-family:inherit}
+.button,.ghost,.logout-btn{display:inline-block;text-decoration:none;border:none;border-radius:12px;padding:12px 18px;font-weight:700;cursor:pointer;font-family:inherit}.button,.logout-btn{background:#ef7faa;color:#fff}.button:hover,.logout-btn:hover{background:#e06a98}.ghost{background:#fff0f5;color:#b74474}.ghost:hover{background:#ffe3ee}
+.meta{margin-bottom:18px;color:#5c3948;font-size:.95rem}.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:620px}th,td{padding:14px 12px;text-align:left}th{background:#f7b6cf;color:#fff}tr:nth-child(even) td{background:#fff7fa}.empty{text-align:center;padding:28px;border-radius:18px;background:#fff7fa;color:#b66b88;font-weight:600}.footer-actions{max-width:1050px;margin:18px auto 0;display:flex;justify-content:center}
+@media (max-width:700px){body{padding:14px}.header,.card{padding:18px}h1{font-size:2.6rem}.form-row{align-items:stretch}.button,.ghost,.logout-btn,input[type='date']{width:100%}}
+</style>
+</head>
+<body>
+<div class="header">
+  <img src="{{ url_for('static', filename='logo.png') }}" alt="Barby Rose" class="logo">
+  <h1>Mis citas</h1>
+  <div class="subtitle">{{ empleada }} · Fecha mostrada: <strong>{{ fecha_filtro }}</strong></div>
+</div>
+
+<div class="card">
+  <form class="form-row" method="GET">
+    <div class="field">
+      <label for="fecha">Filtrar por fecha</label>
+      <input type="date" id="fecha" name="fecha" value="{{ fecha_filtro }}">
+    </div>
+    <button type="submit" class="button">Filtrar</button>
+    <a href="{{ url_for('mis_citas', fecha=hoy) }}" class="ghost">Hoy</a>
+  </form>
+
+  <div class="meta">Se muestran solo las citas de la fecha seleccionada.</div>
+
+  {% if citas %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Cliente</th>
+          <th>Servicio</th>
+          <th>Fecha</th>
+          <th>Hora</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cita in citas %}
+        <tr>
+          <td>{{ cita['nombre'] }}</td>
+          <td>{{ cita['servicio'] }}</td>
+          <td>{{ cita['fecha'] }}</td>
+          <td>{{ cita['horario'] }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty">No tienes citas agendadas para esta fecha.</div>
+  {% endif %}
+</div>
+
+<div class="footer-actions">
+  <a href="{{ url_for('logout') }}" class="logout-btn">Cerrar sesión</a>
+</div>
+</body>
+</html>

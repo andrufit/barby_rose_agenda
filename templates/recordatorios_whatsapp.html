@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recordatorios WhatsApp - Barby Rose</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--brand-font:'Cormorant Garamond', serif;}
+html,body,input,select,textarea,button,table,th,td,a,label,span,div,p,h1,h2,h3,h4,h5,h6{font-family:var(--brand-font) !important;letter-spacing:.01em;color:#442a37;}
+body{font-size:1.08rem;line-height:1.45;}
+input,select,textarea,button,a,th,td,label,p{font-size:1.08rem !important;}
+
+
+body{font-family:'Cormorant Garamond', serif;background:#fff7fb;margin:0;padding:24px;color:#5b3150}
+.container{max-width:1200px;margin:auto;background:white;border-radius:18px;padding:24px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+h1{color:#b74474;text-align:center;margin-top:0}.topbar{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:18px}
+.topbar a,.topbar button,.topbar input[type=date]{padding:10px 14px;border-radius:10px;border:none;font-weight:700}
+.topbar a,.topbar button{background:#d25b8d;color:white;text-decoration:none;cursor:pointer}
+.topbar a:hover,.topbar button:hover{background:#b74474}
+.topbar input[type=date]{border:2px solid #d25b8d;background:white;color:#5b3150}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:18px 0}
+.stat{background:#fff0f5;border:1px solid #ffd1e0;border-radius:14px;padding:14px;text-align:center}
+.table-wrap{overflow:auto} table{width:100%;border-collapse:collapse} th{background:#d25b8d;color:white;padding:10px} td{padding:10px;border-bottom:1px solid #f1d5df;text-align:center}
+.btn-wa{background:#25D366;color:white;padding:8px 12px;border-radius:8px;text-decoration:none;font-weight:700;display:inline-block}
+.btn-wa:hover{opacity:.9}.btn-muted{background:#ddd;color:#666;padding:8px 12px;border-radius:8px;text-decoration:none;display:inline-block}
+.note{font-size:.95em;color:#7a4a63;margin:10px 0 18px;text-align:center}
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>💬 Recordatorios WhatsApp</h1>
+    <form class="topbar" method="GET">
+        <input type="date" name="fecha" value="{{ fecha }}">
+        <button type="submit">Ver fecha</button>
+        <button type="button" id="btn-enviar-todos">Enviar todos por WhatsApp Web</button>
+        <a href="{{ url_for('recordatorios_whatsapp_secuencial', fecha=fecha) }}">Modo 1 por 1</a>
+        <a href="{{ url_for('admin_panel', fecha=fecha) }}">Volver al panel</a>
+    </form>
+
+    <div class="note">Con un clic se abrirán en WhatsApp Web todos los recordatorios del día seleccionado que tengan teléfono registrado. Cada mensaje incluye la dirección y el enlace de Maps.</div>
+
+    <div class="stat" style="margin-bottom:18px;"><strong>Dirección</strong><br>{{ direccion_negocio }}<br><a href="{{ maps_url }}" target="_blank">Abrir Maps</a></div>
+
+    <div class="stats">
+        <div class="stat"><strong>{{ total }}</strong><br>Total citas</div>
+        <div class="stat"><strong>{{ con_telefono }}</strong><br>Listas para enviar</div>
+        <div class="stat"><strong>{{ sin_telefono }}</strong><br>Sin teléfono</div>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <tr>
+                <th>Hora</th>
+                <th>Clienta</th>
+                <th>Servicio</th>
+                <th>Empleada</th>
+                <th>Teléfono</th>
+                <th>Acción</th>
+            </tr>
+            {% for r in recordatorios %}
+            <tr>
+                <td>{{ r.horario }}</td>
+                <td>{{ r.nombre }}</td>
+                <td>{{ r.servicio }}</td>
+                <td>{{ r.empleada }}</td>
+                <td>{{ r.telefono or 'Sin teléfono' }}</td>
+                <td>
+                    {% if r.tiene_telefono %}
+                        <a class="btn-wa wa-link" href="{{ r.whatsapp_url }}" target="_blank">💬 Enviar</a>
+                    {% else %}
+                        <a class="btn-muted" href="{{ url_for('clientas') }}">Agregar teléfono</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+
+<script>
+document.getElementById('btn-enviar-todos').addEventListener('click', function() {
+    const links = Array.from(document.querySelectorAll('.wa-link'));
+    if (!links.length) {
+        alert('No hay recordatorios con teléfono para esta fecha.');
+        return;
+    }
+
+    if (!confirm(`Se abrirán ${links.length} recordatorios en WhatsApp Web. ¿Continuar?`)) return;
+
+    links.forEach((link, index) => {
+        setTimeout(() => {
+            window.open(link.href, '_blank');
+        }, index * 700);
+    });
+});
+</script>
+</body>
+</html>

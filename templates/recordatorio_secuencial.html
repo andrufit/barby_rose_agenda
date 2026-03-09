@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recordatorios 1 por 1 - Barby Rose</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--brand-font:'Cormorant Garamond', serif;}
+html,body,input,select,textarea,button,table,th,td,a,label,span,div,p,h1,h2,h3,h4,h5,h6{font-family:var(--brand-font) !important;letter-spacing:.01em;color:#442a37;}
+body{font-size:1.08rem;line-height:1.45;}
+input,select,textarea,button,a,th,td,label,p{font-size:1.08rem !important;}
+
+
+body{font-family:'Cormorant Garamond', serif;background:#fff7fb;margin:0;padding:24px;color:#5b3150}
+.container{max-width:760px;margin:auto;background:white;border-radius:18px;padding:24px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+h1{color:#b74474;text-align:center;margin-top:0}.topbar{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:18px}
+.topbar a,.topbar button,.topbar input[type=date]{padding:10px 14px;border-radius:10px;border:none;font-weight:700}
+.topbar a,.topbar button{background:#d25b8d;color:white;text-decoration:none;cursor:pointer}
+.topbar a:hover,.topbar button:hover{background:#b74474}
+.topbar input[type=date]{border:2px solid #d25b8d;background:white;color:#5b3150}
+.card{background:#fff0f5;border:1px solid #ffd1e0;border-radius:16px;padding:20px}.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin:18px 0}.meta div{background:white;border-radius:12px;padding:12px;border:1px solid #f3d2de}.wa{display:inline-block;background:#25D366;color:white;padding:12px 16px;border-radius:10px;text-decoration:none;font-weight:700}.muted{display:inline-block;background:#ddd;color:#666;padding:12px 16px;border-radius:10px;text-decoration:none;font-weight:700}.nav{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:18px}.small{font-size:.95em;color:#7a4a63;text-align:center;margin-bottom:18px} .center{text-align:center}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>💬 Recordatorios 1 por 1</h1>
+  <form class="topbar" method="GET">
+    <input type="date" name="fecha" value="{{ fecha }}">
+    <input type="hidden" name="indice" value="0">
+    <button type="submit">Ver fecha</button>
+    <a href="{{ url_for('recordatorios_whatsapp', fecha=fecha) }}">Ver listado</a>
+    <a href="{{ url_for('admin_panel', fecha=fecha) }}">Volver al panel</a>
+  </form>
+
+  {% if actual %}
+    <p class="small">Recordatorio {{ indice + 1 }} de {{ total }}</p>
+    <div class="card">
+      <div class="meta">
+        <div><strong>Hora</strong><br>{{ actual.horario }}</div>
+        <div><strong>Clienta</strong><br>{{ actual.nombre }}</div>
+        <div><strong>Servicio</strong><br>{{ actual.servicio }}</div>
+        <div><strong>Empleada</strong><br>{{ actual.empleada }}</div>
+        <div><strong>Teléfono</strong><br>{{ actual.telefono or 'Sin teléfono' }}</div>
+        <div><strong>Dirección</strong><br>{{ direccion_negocio }}</div>
+      </div>
+      <p class="center"><a href="{{ maps_url }}" target="_blank">Abrir ubicación en Maps</a></p>
+      <div class="center">
+        {% if actual.tiene_telefono %}
+          <a class="wa" href="{{ actual.whatsapp_url }}" target="_blank">💬 Enviar por WhatsApp Web</a>
+        {% else %}
+          <a class="muted" href="{{ url_for('clientas') }}">Agregar teléfono</a>
+        {% endif %}
+      </div>
+      <div class="nav">
+        <div>
+          {% if anterior_indice is not none %}
+            <a href="{{ url_for('recordatorios_whatsapp_secuencial', fecha=fecha, indice=anterior_indice) }}">⬅️ Anterior</a>
+          {% endif %}
+        </div>
+        <div>
+          {% if siguiente_indice is not none %}
+            <a href="{{ url_for('recordatorios_whatsapp_secuencial', fecha=fecha, indice=siguiente_indice) }}">Siguiente ➡️</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <div class="card center">No hay citas para esta fecha.</div>
+  {% endif %}
+</div>
+</body>
+</html>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel Administrador - Barby Rose</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--brand-font:'Cormorant Garamond', serif;}
+html,body,input,select,textarea,button,table,th,td,a,label,span,div,p,h1,h2,h3,h4,h5,h6{font-family:var(--brand-font) !important;letter-spacing:.01em;color:#442a37;}
+body{font-size:1.08rem;line-height:1.45;}
+input,select,textarea,button,a,th,td,label,p{font-size:1.08rem !important;}
+
+
+*{box-sizing:border-box;margin:0;padding:0} body{font-family:'Cormorant Garamond', serif;background:#fff0f5;padding:20px;color:#442a37}
+.header{max-width:1200px;margin:0 auto 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}.brand{display:flex;align-items:center;gap:18px}.brand img{width:150px;max-width:38vw}.brand h1{font-family:'Cormorant Garamond',serif;color:#b74474;font-size:3.1rem;line-height:1;font-weight:700}
+.menu{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin:18px auto 25px;max-width:1200px}.menu a{background:#d25b8d;color:white;padding:10px 18px;border-radius:10px;text-decoration:none;font-weight:700;transition:.3s}.menu a:hover{background:#b74474}
+.card{background:white;padding:25px;border-radius:18px;box-shadow:0 6px 18px rgba(0,0,0,0.08);max-width:1200px;margin:0 auto 20px}
+form{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:20px}label{font-weight:700;color:#b74474}input[type=date]{padding:8px;border-radius:8px;border:2px solid #d25b8d}
+button,.btn-link{background:#d25b8d;color:white;border:none;padding:8px 15px;border-radius:8px;cursor:pointer;font-weight:700;text-decoration:none;display:inline-block}.btn-link:hover,button:hover{background:#b74474}
+table{width:100%;border-collapse:collapse;margin-top:10px}th{background:#d25b8d;color:white;padding:10px}td{padding:10px;text-align:center;border-bottom:1px solid #eee}tr:hover{background:#fff5f7}.actions{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap}
+.btn-delete{background:#b74474;color:white;padding:5px 10px;border-radius:6px;text-decoration:none;font-size:14px}.btn-delete:hover{background:#c04070}.btn-edit{color:#009688;font-weight:700;text-decoration:none}.btn-wa{background:#25D366;color:white;padding:5px 10px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:700}
+.section-title{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}.mini{font-size:.92rem;color:#5c3948}.stack{display:grid;gap:20px}
+@media(max-width:768px){table{font-size:13px}.menu{flex-direction:column;align-items:center}.header{justify-content:center;text-align:center}.brand{flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="brand">
+    <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo">
+    <div>
+      <h1>Panel Administrador 👩‍💼</h1>
+      <div class="mini">Barby Rose Nail Spa · Armenia, Quindío</div>
+    </div>
+  </div>
+</div>
+<div class="menu">
+<a href="{{ url_for('crear_empleada') }}">➕ Crear Empleada</a>
+<a href="{{ url_for('clientas') }}">👩‍🦰 Crear Clienta</a>
+<a href="{{ url_for('calendario_pro') }}">📅 Calendario Pro</a>
+<a href="{{ url_for('agendar') }}">📌 Agendar</a>
+<a href="{{ url_for('recordatorios_whatsapp', fecha=fecha_filtro or '') }}">💬 Recordatorios</a>
+<a href="{{ url_for('logout') }}">🚪 Cerrar sesión</a>
+</div>
+<div class="card">
+  <form method="GET">
+    <label>Filtrar por fecha</label>
+    <input type="date" name="fecha" value="{{ fecha_filtro }}">
+    <button type="submit">Filtrar</button>
+    <a class="btn-link" href="{{ url_for('admin_panel', fecha=hoy) }}">Hoy</a>
+    {% if fecha_filtro %}
+    <a class="btn-link" href="{{ url_for('recordatorios_whatsapp', fecha=fecha_filtro) }}">Ir a recordatorios del día</a>
+    <a class="btn-link" href="{{ url_for('recordatorios_whatsapp_secuencial', fecha=fecha_filtro) }}">Modo 1 por 1</a>
+    {% endif %}
+  </form>
+</div>
+<div class="stack">
+<div class="card">
+<div class="section-title"><h2 style="font-family: 'Cormorant Garamond', serif; font-size:2.45rem; line-height:1; color:#b74474;">Citas del día</h2><div class="mini">Por defecto ves solo las citas de la fecha seleccionada</div></div>
+{% if citas %}
+<table>
+<tr><th>ID</th><th>Cliente</th><th>Servicio</th><th>Fecha</th><th>Hora</th><th>Empleada</th><th>Acción</th></tr>
+{% for cita in citas %}
+<tr>
+<td>{{ cita[0] }}</td><td>{{ cita[1] }}</td><td>{{ cita[2] }}</td><td>{{ cita[3] }}</td><td>{{ cita[4] }}</td><td>{{ cita[5] }}</td>
+<td><div class="actions">
+<a class="btn-edit" href="/editar_cita/{{ cita[0] }}">✏️ Editar</a>
+<a class="btn-delete" href="{{ url_for('eliminar', id=cita[0]) }}" onclick="return confirm('¿Eliminar cita?')">❌</a>
+<a class="btn-wa" href="{{ url_for('recordatorio_whatsapp', cita_id=cita[0]) }}" target="_blank">💬 WhatsApp</a>
+</div></td>
+</tr>
+{% endfor %}
+</table>
+{% else %}<p>No hay citas registradas.</p>{% endif %}
+</div>
+<div class="card">
+<div class="section-title"><h2 style="font-family: 'Cormorant Garamond', serif; font-size:2.45rem; line-height:1; color:#b74474;">Empleadas registradas</h2><div class="mini">Aquí puedes verlas, modificarlas o eliminarlas</div></div>
+{% if empleadas %}
+<table>
+<tr><th>ID</th><th>Nombre</th><th>Rol</th><th>Acciones</th></tr>
+{% for emp in empleadas %}
+<tr>
+<td>{{ emp[0] }}</td><td>{{ emp[1] }}</td><td>{{ emp[2] }}</td>
+<td><div class="actions">
+<a class="btn-edit" href="{{ url_for('editar_empleada', empleada_id=emp[0]) }}">✏️ Modificar</a>
+{% if emp[1] != 'admin' %}
+<a class="btn-delete" href="{{ url_for('eliminar_empleada', nombre=emp[1]) }}" onclick="return confirm('¿Eliminar empleada?')">🗑️ Eliminar</a>
+{% else %}
+<span class="mini">Cuenta protegida</span>
+{% endif %}
+</div></td>
+</tr>
+{% endfor %}
+</table>
+{% else %}<p>No hay empleadas registradas.</p>{% endif %}
+</div>
+</div>
+</body>
+</html>
