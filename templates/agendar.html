@@ -49,6 +49,13 @@ input,select,textarea,button,a,th,td,label,p{font-size:1.08rem !important;}
                 <option value="{{ servicio[0] }}">{{ servicio[1] }} ({{ servicio[2] }} min)</option>
             {% endfor %}
         </select>
+        <label>Servicio adicional:</label>
+<select name="servicio_extra">
+    <option value="">Ninguno</option>
+    {% for servicio in servicios %}
+        <option value="{{ servicio[0] }}">{{ servicio[1] }} ({{ servicio[2] }} min)</option>
+    {% endfor %}
+</select>
 
         <label>Fecha:</label>
         <input type="date" name="fecha" required min="{{ fecha_actual }}">

@@ -450,24 +450,30 @@ def admin_panel():
         return guard
 
     fecha = request.args.get("fecha", "").strip() or date.today().isoformat()
+    empleada = request.args.get("empleada", "").strip()
     db = get_db()
     cursor = db.cursor()
 
-    cursor.execute(
-        """
+    if empleada:
+        cursor.execute("""
+        SELECT id, nombre, servicio, fecha, horario, empleada
+        FROM citas
+        WHERE fecha=? AND empleada=?
+        ORDER BY horario
+    """, (fecha, empleada))
+    else:
+     cursor.execute("""
         SELECT id, nombre, servicio, fecha, horario, empleada
         FROM citas
         WHERE fecha=?
         ORDER BY horario
-        """,
-        (fecha,),
-    )
+    """, (fecha,))
     citas = cursor.fetchall()
 
     cursor.execute("SELECT id, nombre, rol FROM empleadas ORDER BY nombre")
     empleadas = cursor.fetchall()
 
-    return render_template("admin.html", citas=citas, empleadas=empleadas, fecha_filtro=fecha, hoy=date.today().isoformat())
+    return render_template("admin.html", citas=citas, empleadas=empleadas, fecha_filtro=fecha,empleada_filtro=empleada, hoy=date.today().isoformat())
 
 
 @app.route("/mis_citas")
@@ -660,6 +666,7 @@ def agendar():
         telefono = request.form.get("telefono", "").strip()
         cliente = request.form.get("nombre", "").strip()
         servicio_id = request.form.get("servicio", "").strip()
+        servicio_extra_id = request.form.get("servicio_extra", "").strip()
         fecha = request.form.get("fecha", "").strip()
         horario = request.form.get("horario", "").strip()
         empleada = request.form.get("empleada", "").strip()
@@ -681,6 +688,15 @@ def agendar():
 
         nombre_servicio = servicio["nombre"]
         duracion = int(servicio["duracion"] or 60)
+
+        # Servicio adicional
+        if servicio_extra_id:
+         cursor.execute("SELECT nombre, duracion FROM servicios WHERE id=?", (servicio_extra_id,))
+        servicio_extra = cursor.fetchone()
+
+        if servicio_extra:
+            nombre_servicio += " + " + servicio_extra["nombre"]
+            duracion += int(servicio_extra["duracion"] or 60)
 
         try:
             datetime.strptime(horario, "%H:%M")

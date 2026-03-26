@@ -21,6 +21,18 @@ table{width:100%;border-collapse:collapse;margin-top:10px}th{background:#d25b8d;
 .btn-delete{background:#b74474;color:white;padding:5px 10px;border-radius:6px;text-decoration:none;font-size:14px}.btn-delete:hover{background:#c04070}.btn-edit{color:#009688;font-weight:700;text-decoration:none}.btn-wa{background:#25D366;color:white;padding:5px 10px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:700}
 .section-title{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}.mini{font-size:.92rem;color:#5c3948}.stack{display:grid;gap:20px}
 @media(max-width:768px){table{font-size:13px}.menu{flex-direction:column;align-items:center}.header{justify-content:center;text-align:center}.brand{flex-direction:column}}
+
+.filtro-empleada{
+  padding:8px;
+  border-radius:8px;
+  border:2px solid #d25b8d;
+}
+
+.filtro-empleada:focus{
+  outline: none;
+  border:2px solid #b74474;
+  box-shadow: 0 0 5px rgba(210, 91, 141, 0.5);
+}
 </style>
 </head>
 <body>
@@ -46,6 +58,15 @@ table{width:100%;border-collapse:collapse;margin-top:10px}th{background:#d25b8d;
     <label>Filtrar por fecha</label>
     <input type="date" name="fecha" value="{{ fecha_filtro }}">
     <button type="submit">Filtrar</button>
+   <label>Filtrar por empleada</label>
+<select name="empleada" class="filtro-empleada">
+  <option value="">Todas</option>
+  {% for emp in empleadas %}
+    <option value="{{ emp[1] }}" {% if empleada_filtro == emp[1] %}selected{% endif %}>
+      {{ emp[1] }}
+    </option>
+  {% endfor %}
+</select>
     <a class="btn-link" href="{{ url_for('admin_panel', fecha=hoy) }}">Hoy</a>
     {% if fecha_filtro %}
     <a class="btn-link" href="{{ url_for('recordatorios_whatsapp', fecha=fecha_filtro) }}">Ir a recordatorios del día</a>
