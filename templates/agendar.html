@@ -35,6 +35,8 @@ input,select,textarea,button,a,th,td,label,p{font-size:1.08rem !important;}
     <h1>Agendar Cita 💅</h1>
 
     <form method="POST" id="form-agendar">
+
+        <!-- 🔹 DATOS CLIENTA -->
         <label>Teléfono:</label>
         <input type="text" name="telefono" id="telefono" placeholder="Ej: 3001234567" required>
         <div id="telefono-helper" class="helper">Escribe el teléfono y el nombre se completará solo si la clienta ya existe.</div>
@@ -43,25 +45,17 @@ input,select,textarea,button,a,th,td,label,p{font-size:1.08rem !important;}
         <input type="text" name="nombre" id="nombre" placeholder="Se autocompleta si existe; si no, escríbelo" required>
         <div id="nombre-helper" class="helper">Si el teléfono no existe, escribe el nombre para registrar la nueva clienta.</div>
 
+        <hr style="margin:20px 0;">
+
+        <!-- 🔥 SERVICIO PRINCIPAL -->
+        <h3>Servicio principal</h3>
+
         <label>Servicio:</label>
         <select name="servicio" required>
             {% for servicio in servicios %}
                 <option value="{{ servicio[0] }}">{{ servicio[1] }} ({{ servicio[2] }} min)</option>
             {% endfor %}
         </select>
-        <label>Servicio adicional:</label>
-<select name="servicio_extra">
-    <option value="">Ninguno</option>
-    {% for servicio in servicios %}
-        <option value="{{ servicio[0] }}">{{ servicio[1] }} ({{ servicio[2] }} min)</option>
-    {% endfor %}
-</select>
-
-        <label>Fecha:</label>
-        <input type="date" name="fecha" required min="{{ fecha_actual }}">
-
-        <label>Horario:</label>
-        <input type="time" name="horario" required>
 
         <label>Empleada:</label>
         <select name="empleada" required>
@@ -70,8 +64,41 @@ input,select,textarea,button,a,th,td,label,p{font-size:1.08rem !important;}
             {% endfor %}
         </select>
 
+        <label>Fecha:</label>
+        <input type="date" name="fecha" required min="{{ fecha_actual }}">
+
+        <label>Hora:</label>
+        <input type="time" name="horario" required>
+
+        <hr style="margin:20px 0;">
+
+        <!-- 🔥 SERVICIO ADICIONAL -->
+        <h3>Servicio adicional (opcional)</h3>
+
+        <label>Servicio adicional:</label>
+        <select name="servicio_extra">
+            <option value="">Ninguno</option>
+            {% for servicio in servicios %}
+                <option value="{{ servicio[0] }}">{{ servicio[1] }} ({{ servicio[2] }} min)</option>
+            {% endfor %}
+        </select>
+
+        <label>Empleada (adicional):</label>
+        <select name="empleada_extra">
+            <option value="">Seleccionar</option>
+            {% for emp in empleadas %}
+                <option value="{{ emp[1] }}">{{ emp[1] }}</option>
+            {% endfor %}
+        </select>
+
+        <label>Hora (adicional):</label>
+        <input type="time" name="hora_extra">
+
+        <br><br>
+
         <button type="submit">Agendar</button>
     </form>
+</div>
 
     <a class="back" href="{{ url_for('admin_panel') }}">← Volver al Panel</a>
 </div>

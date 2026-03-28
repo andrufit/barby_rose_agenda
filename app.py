@@ -667,13 +667,17 @@ def agendar():
         cliente = request.form.get("nombre", "").strip()
         servicio_id = request.form.get("servicio", "").strip()
         servicio_extra_id = request.form.get("servicio_extra", "").strip()
+        empleada_extra = request.form.get("empleada_extra", "").strip()
+        hora_extra = request.form.get("hora_extra", "").strip()
         fecha = request.form.get("fecha", "").strip()
         horario = request.form.get("horario", "").strip()
         empleada = request.form.get("empleada", "").strip()
 
+        # Validación básica
         if not all([telefono, servicio_id, fecha, horario, empleada]):
             return "Telefono, servicio, fecha, hora y empleada son obligatorios", 400
 
+        # Buscar clienta
         clienta_existente = buscar_clienta_por_telefono(cursor, telefono)
         if clienta_existente and not cliente:
             cliente = clienta_existente["nombre"]
@@ -681,6 +685,7 @@ def agendar():
         if not cliente:
             return "Si el telefono no existe, debes escribir el nombre de la clienta", 400
 
+        # 🔹 Servicio principal
         cursor.execute("SELECT nombre, duracion FROM servicios WHERE id=?", (servicio_id,))
         servicio = cursor.fetchone()
         if not servicio:
@@ -689,36 +694,74 @@ def agendar():
         nombre_servicio = servicio["nombre"]
         duracion = int(servicio["duracion"] or 60)
 
-        # Servicio adicional
+        # 🔹 Servicio adicional
+        crear_segunda_cita = False
+        servicio_extra = None
+
         if servicio_extra_id:
-         cursor.execute("SELECT nombre, duracion FROM servicios WHERE id=?", (servicio_extra_id,))
-        servicio_extra = cursor.fetchone()
+            cursor.execute("SELECT nombre, duracion FROM servicios WHERE id=?", (servicio_extra_id,))
+            servicio_extra = cursor.fetchone()
 
-        if servicio_extra:
-            nombre_servicio += " + " + servicio_extra["nombre"]
-            duracion += int(servicio_extra["duracion"] or 60)
+            if servicio_extra:
+                # 👉 MISMA EMPLEADA → unir servicios
+                if not empleada_extra or empleada_extra == empleada:
+                    nombre_servicio += " + " + servicio_extra["nombre"]
+                    duracion += int(servicio_extra["duracion"] or 60)
 
+                # 👉 DIFERENTE EMPLEADA → NO tocar principal
+                else:
+                    crear_segunda_cita = True
+
+        # 🔹 Validar hora principal
         try:
             datetime.strptime(horario, "%H:%M")
         except ValueError:
             return "Hora invalida", 400
 
+        # 🔹 Validar conflicto principal
         if has_schedule_conflict(cursor, fecha, horario, duracion, empleada):
             return "Horario ocupado", 400
 
+        # 🔹 Validar hora adicional
+        if crear_segunda_cita:
+            if not hora_extra:
+                return "Debes ingresar hora para el servicio adicional"
+
+            try:
+                datetime.strptime(hora_extra, "%H:%M")
+            except ValueError:
+                return "Hora adicional invalida", 400
+
+            # (Opcional pero recomendado) validar conflicto extra
+            if has_schedule_conflict(cursor, fecha, hora_extra, int(servicio_extra["duracion"] or 60), empleada_extra):
+                return "Horario adicional ocupado", 400
+
+        # 🔹 Guardar clienta
         clienta_guardada = guardar_o_actualizar_clienta_por_telefono(cursor, cliente, telefono)
         if clienta_guardada:
             cliente = clienta_guardada["nombre"]
 
-        cursor.execute(
-            """
+        # 🔹 Insert principal
+        cursor.execute("""
             INSERT INTO citas (nombre, servicio, fecha, horario, empleada, duracion)
             VALUES (?, ?, ?, ?, ?, ?)
-            """,
-            (cliente, nombre_servicio, fecha, horario, empleada, duracion),
-        )
-        db.commit()
+        """, (cliente, nombre_servicio, fecha, horario, empleada, duracion))
 
+        # 🔹 Insert adicional (SOLO si es otra empleada)
+        if crear_segunda_cita:
+            cursor.execute("""
+                INSERT INTO citas (nombre, servicio, fecha, horario, empleada, duracion)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (
+                cliente,
+                servicio_extra["nombre"],
+                fecha,
+                hora_extra,
+                empleada_extra,
+                int(servicio_extra["duracion"] or 60)
+            ))
+
+        db.commit()
         return redirect(url_for("admin_panel"))
 
     return render_template(
