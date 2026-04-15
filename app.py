@@ -529,9 +529,67 @@ def clientas():
         db.commit()
         return redirect(url_for("clientas"))
 
+    telefono_filtro = request.args.get("telefono", "").strip()
+    edit_id = request.args.get("edit_id", "").strip()
+    edit_clienta = None
+
     cursor.execute("SELECT * FROM clientas ORDER BY nombre")
-    clientas_lista = cursor.fetchall()
-    return render_template("clientas.html", clientas=clientas_lista)
+    todas = cursor.fetchall()
+
+    if telefono_filtro:
+        telefono_normalizado = normalize_phone(telefono_filtro)
+        clientas_lista = [
+            c for c in todas
+            if telefono_normalizado in normalize_phone(c["telefono"] or "")
+        ]
+    else:
+        clientas_lista = todas
+
+    if edit_id:
+        cursor.execute("SELECT * FROM clientas WHERE id=?", (edit_id,))
+        edit_clienta = cursor.fetchone()
+
+    return render_template(
+        "clientas.html",
+        clientas=clientas_lista,
+        telefono_filtro=telefono_filtro,
+        edit_clienta=edit_clienta,
+    )
+
+
+@app.route("/actualizar_clienta/<int:clienta_id>", methods=["POST"])
+def actualizar_clienta(clienta_id):
+    guard = admin_required()
+    if guard:
+        return guard
+
+    nombre = request.form.get("nombre", "").strip()
+    telefono = request.form.get("telefono", "").strip()
+
+    if not nombre:
+        return "El nombre es obligatorio", 400
+
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute(
+        "UPDATE clientas SET nombre=?, telefono=? WHERE id=?",
+        (nombre, telefono, clienta_id),
+    )
+    db.commit()
+    return redirect(url_for("clientas", telefono=request.args.get("telefono", "").strip()))
+
+
+@app.route("/eliminar_clienta/<int:clienta_id>", methods=["POST"])
+def eliminar_clienta(clienta_id):
+    guard = admin_required()
+    if guard:
+        return guard
+
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("DELETE FROM clientas WHERE id=?", (clienta_id,))
+    db.commit()
+    return redirect(url_for("clientas", telefono=request.args.get("telefono", "").strip()))
 
 
 @app.route("/crear_empleada", methods=["GET", "POST"])

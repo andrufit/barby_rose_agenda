@@ -1,160 +1,110 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Clientas</title>
-
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet">
-
 <style>
 :root{--brand-font:'Cormorant Garamond', serif;}
 html,body,input,select,textarea,button,table,th,td,a,label,span,div,p,h1,h2,h3,h4,h5,h6{font-family:var(--brand-font) !important;letter-spacing:.01em;color:#442a37;}
-body{font-size:1.08rem;line-height:1.45;}
+body{font-size:1.08rem;line-height:1.45;background:#fff0f6;padding:30px;}
 input,select,textarea,button,a,th,td,label,p{font-size:1.08rem !important;}
-
-
-
-body{
-font-family:Poppins;
-background:#fff0f6;
-padding:30px;
-}
-
-.container{
-max-width:800px;
-margin:auto;
-}
-
-h1{
-text-align:center;
-color:#e91e63;
-margin-bottom:20px;
-}
-
-.card{
-background:white;
-padding:25px;
-border-radius:15px;
-box-shadow:0 5px 15px rgba(0,0,0,0.1);
-margin-bottom:25px;
-}
-
-form{
-display:flex;
-gap:10px;
-flex-wrap:wrap;
-}
-
-input{
-padding:10px;
-border-radius:8px;
-border:1px solid #ddd;
-flex:1;
-}
-
-button{
-background:#ff4d88;
-color:white;
-border:none;
-padding:10px 18px;
-border-radius:8px;
-cursor:pointer;
-}
-
-button:hover{
-background:#e6005c;
-}
-
-table{
-width:100%;
-border-collapse:collapse;
-}
-
-th{
-background:#ff4d88;
-color:white;
-padding:10px;
-}
-
-td{
-padding:10px;
-border-bottom:1px solid #eee;
-text-align:center;
-}
-
-tr:hover{
-background:#fff5f8;
-}
-
-.back{
-display:inline-block;
-margin-bottom:20px;
-text-decoration:none;
-color:#e91e63;
-font-weight:bold;
-}
-
+.container{max-width:1100px;margin:auto;}
+h1{text-align:center;color:#e91e63;margin-bottom:20px;}
+.card{background:white;padding:25px;border-radius:15px;box-shadow:0 5px 15px rgba(0,0,0,0.1);margin-bottom:25px;}
+form{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+input{padding:10px;border-radius:8px;border:1px solid #ddd;flex:1;min-width:200px;background:#fff;}
+button,.btn{background:#ff4d88;color:white;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;text-decoration:none;display:inline-block;}
+button:hover,.btn:hover{background:#e6005c;}
+.btn-secondary{background:#f7bfd2;color:#7d294a;}
+.btn-secondary:hover{background:#f3a9c4;}
+.btn-danger{background:#c62828;color:white;}
+.btn-danger:hover{background:#a61f1f;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;min-width:760px;}
+th{background:#ff4d88;color:white;padding:10px;}
+td{padding:10px;border-bottom:1px solid #eee;text-align:center;vertical-align:middle;}
+tr:hover{background:#fff5f8;}
+.back{display:inline-block;margin-bottom:20px;text-decoration:none;color:#e91e63;font-weight:bold;}
+.actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+.inline-form{display:inline-flex;gap:8px;align-items:center;}
+.toolbar{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:15px;}
+.muted{color:#7a5b67;}
+.empty{padding:20px;text-align:center;color:#7a5b67;}
 </style>
-
 </head>
 <body>
-
 <div class="container">
-
 <h1>Clientas</h1>
-
 <a class="back" href="{{ url_for('admin_panel') }}">← Volver</a>
 
 <div class="card">
+  <h3>{{ 'Editar clienta' if edit_clienta else 'Agregar clienta' }}</h3>
 
-<h3>Agregar Clienta</h3>
-
-<form method="POST">
-
-<input name="nombre" placeholder="Nombre de la clienta" required>
-
-<input name="telefono" placeholder="Teléfono">
-
-<button type="submit">Guardar</button>
-
-</form>
-
+  {% if edit_clienta %}
+  <form method="POST" action="{{ url_for('actualizar_clienta', clienta_id=edit_clienta['id'], telefono=telefono_filtro) }}">
+    <input name="nombre" placeholder="Nombre de la clienta" required value="{{ edit_clienta['nombre'] }}">
+    <input name="telefono" placeholder="Teléfono" value="{{ edit_clienta['telefono'] or '' }}">
+    <button type="submit">Actualizar</button>
+    <a class="btn btn-secondary" href="{{ url_for('clientas', telefono=telefono_filtro) }}">Cancelar</a>
+  </form>
+  {% else %}
+  <form method="POST">
+    <input name="nombre" placeholder="Nombre de la clienta" required>
+    <input name="telefono" placeholder="Teléfono">
+    <button type="submit">Guardar</button>
+  </form>
+  {% endif %}
 </div>
 
 <div class="card">
+  <div class="toolbar">
+    <div>
+      <h3 style="margin:0;">Lista de Clientas</h3>
+      <div class="muted">Total mostradas: {{ clientas|length }}</div>
+    </div>
 
-<h3>Lista de Clientas</h3>
+    <form method="GET" action="{{ url_for('clientas') }}">
+      <input name="telefono" placeholder="Buscar por teléfono" value="{{ telefono_filtro or '' }}">
+      <button type="submit">Buscar</button>
+      {% if telefono_filtro %}
+      <a class="btn btn-secondary" href="{{ url_for('clientas') }}">Limpiar</a>
+      {% endif %}
+    </form>
+  </div>
 
-<table>
+  <div class="table-wrap">
+    <table>
+      <tr>
+        <th>ID</th>
+        <th>Nombre</th>
+        <th>Teléfono</th>
+        <th>Acciones</th>
+      </tr>
 
-<tr>
-<th>ID</th>
-<th>Nombre</th>
-<th>Teléfono</th>
-</tr>
-
-{% for c in clientas %}
-
-<tr>
-
-<td>{{ c["id"] }}</td>
-
-<td>{{ c["nombre"] }}</td>
-
-<td>{{ c["telefono"] }}</td>
-
-</tr>
-
-{% endfor %}
-
-</table>
-
+      {% for c in clientas %}
+      <tr>
+        <td>{{ c["id"] }}</td>
+        <td>{{ c["nombre"] }}</td>
+        <td>{{ c["telefono"] }}</td>
+        <td>
+          <div class="actions">
+            <a class="btn btn-secondary" href="{{ url_for('clientas', edit_id=c['id'], telefono=telefono_filtro) }}">Modificar</a>
+            <form class="inline-form" method="POST" action="{{ url_for('eliminar_clienta', clienta_id=c['id'], telefono=telefono_filtro) }}" onsubmit="return confirm('¿Seguro que quieres eliminar esta clienta?');">
+              <button type="submit" class="btn-danger">Eliminar</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="4" class="empty">No se encontraron clientas con ese teléfono.</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
 </div>
-
 </div>
-
 </body>
 </html>
