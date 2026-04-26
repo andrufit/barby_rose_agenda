@@ -1,10 +1,18 @@
 import os
+import json
 import sqlite3
 from datetime import datetime, timedelta, date
 from pathlib import Path
 from urllib.parse import quote
 
 from flask import Flask, render_template, request, redirect, url_for, session, g, jsonify
+
+try:
+    from twilio.rest import Client
+    TWILIO_AVAILABLE = True
+except Exception:
+    Client = None
+    TWILIO_AVAILABLE = False
 
 try:
     import psycopg2
@@ -30,6 +38,11 @@ MAPS_URL = os.environ.get(
     "MAPS_URL",
     "https://maps.app.goo.gl/W8E5RV7LpcQbHDa2A",
 )
+
+TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID", "").strip()
+TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN", "").strip()
+TWILIO_WHATSAPP_FROM = os.environ.get("TWILIO_WHATSAPP_FROM", "").strip()
+TWILIO_CONTENT_SID_RECORDATORIO = os.environ.get("TWILIO_CONTENT_SID_RECORDATORIO", "").strip()
 
 
 class DBConnectionWrapper:
@@ -270,6 +283,45 @@ def build_whatsapp_url(nombre: str, servicio: str, fecha_cita: str, horario: str
         "Por favor confirma tu asistencia. 💅"
     )
     return f"https://web.whatsapp.com/send?phone={telefono}&text={quote(mensaje)}"
+
+
+def enviar_template_whatsapp(telefono: str, variables: dict):
+    """Envia una plantilla de WhatsApp por Twilio.
+
+    Esta funcion es segura para pruebas: si falta una variable de entorno o Twilio
+    responde con error, devuelve {"ok": False, "error": "..."} en vez de tumbar la app.
+    """
+    telefono = limpiar_numero_whatsapp(telefono)
+
+    if not TWILIO_AVAILABLE or Client is None:
+        return {"ok": False, "error": "La libreria twilio no esta instalada"}
+
+    if not telefono:
+        return {"ok": False, "error": "Telefono invalido"}
+
+    if not TWILIO_ACCOUNT_SID or not TWILIO_AUTH_TOKEN:
+        return {"ok": False, "error": "Faltan credenciales de Twilio"}
+
+    if not TWILIO_WHATSAPP_FROM:
+        return {"ok": False, "error": "Falta TWILIO_WHATSAPP_FROM"}
+
+    if not TWILIO_CONTENT_SID_RECORDATORIO:
+        return {"ok": False, "error": "Falta TWILIO_CONTENT_SID_RECORDATORIO"}
+
+    try:
+        client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+        msg = client.messages.create(
+            from_=TWILIO_WHATSAPP_FROM,
+            to=f"whatsapp:+{telefono}",
+            content_sid=TWILIO_CONTENT_SID_RECORDATORIO,
+            content_variables=json.dumps({
+                "1": variables.get("fecha", ""),
+                "2": variables.get("hora", ""),
+            }),
+        )
+        return {"ok": True, "sid": msg.sid, "status": msg.status}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
 
 
 def init_db():
@@ -1122,6 +1174,20 @@ def recordatorio_whatsapp(cita_id):
         return "Numero de telefono invalido", 400
 
     return redirect(build_whatsapp_url(cita["nombre"], cita["servicio"], cita["fecha"], cita["horario"], cita["empleada"], cita["telefono"]))
+
+
+@app.route("/test_whatsapp")
+def test_whatsapp():
+    # Ruta aislada para probar Twilio sin tocar la agenda.
+    # Cambia este numero por el tuyo si vas a probar con otro telefono.
+    resultado = enviar_template_whatsapp(
+        "573214627686",
+        {
+            "fecha": "12/1",
+            "hora": "3pm",
+        },
+    )
+    return jsonify(resultado)
 
 
 @app.route("/logout")
