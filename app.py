@@ -311,14 +311,10 @@ def enviar_template_whatsapp(telefono: str, variables: dict):
     try:
         client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
         msg = client.messages.create(
-            from_=TWILIO_WHATSAPP_FROM,
-            to=f"whatsapp:+{telefono}",
-            content_sid=TWILIO_CONTENT_SID_RECORDATORIO,
-            content_variables=json.dumps({
-                "1": variables.get("fecha", ""),
-                "2": variables.get("hora", ""),
-            }),
-        )
+    from_=TWILIO_WHATSAPP_FROM,
+    to=f"whatsapp:+{telefono}",
+    body=f"Hola 👋 tu cita es el {variables.get('fecha')} a las {variables.get('hora')} 💅",
+)
         return {"ok": True, "sid": msg.sid, "status": msg.status}
     except Exception as e:
         return {"ok": False, "error": str(e)}
