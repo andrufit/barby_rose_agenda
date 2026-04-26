@@ -286,11 +286,6 @@ def build_whatsapp_url(nombre: str, servicio: str, fecha_cita: str, horario: str
 
 
 def enviar_template_whatsapp(telefono: str, variables: dict):
-    """Envia una plantilla de WhatsApp por Twilio.
-
-    Esta funcion es segura para pruebas: si falta una variable de entorno o Twilio
-    responde con error, devuelve {"ok": False, "error": "..."} en vez de tumbar la app.
-    """
     telefono = limpiar_numero_whatsapp(telefono)
 
     if not TWILIO_AVAILABLE or Client is None:
@@ -305,20 +300,19 @@ def enviar_template_whatsapp(telefono: str, variables: dict):
     if not TWILIO_WHATSAPP_FROM:
         return {"ok": False, "error": "Falta TWILIO_WHATSAPP_FROM"}
 
-    if not TWILIO_CONTENT_SID_RECORDATORIO:
-        return {"ok": False, "error": "Falta TWILIO_CONTENT_SID_RECORDATORIO"}
-
     try:
         client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+
         msg = client.messages.create(
-    from_=TWILIO_WHATSAPP_FROM,
-    to=f"whatsapp:+{telefono}",
-    body=f"Hola 👋 tu cita es el {variables.get('fecha')} a las {variables.get('hora')} 💅",
-)
+            from_=TWILIO_WHATSAPP_FROM,
+            to=f"whatsapp:+{telefono}",
+            body=f"Hola 👋 tu cita es el {variables.get('fecha')} a las {variables.get('hora')} 💅",
+        )
+
         return {"ok": True, "sid": msg.sid, "status": msg.status}
+
     except Exception as e:
         return {"ok": False, "error": str(e)}
-
 
 def init_db():
     db = get_db()
