@@ -872,6 +872,17 @@ def agendar():
             ))
 
         db.commit()
+
+        resultado_twilio = enviar_template_whatsapp(
+            telefono,
+            {
+                "fecha": fecha,
+                "hora": horario,
+            },
+        )
+
+        print("Resultado Twilio al agendar:", resultado_twilio)
+
         return redirect(url_for("admin_panel"))
 
     return render_template(
