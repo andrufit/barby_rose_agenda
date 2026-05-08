@@ -445,13 +445,29 @@ def init_db():
             ("Pies caballero", 60),
             ("Retiro acrilico Barby Rose", 30),
             ("Retiro acrilico otro lugar", 30),
-            ("permiso manicurista dia completo",540),
-            ("permiso manicurista medio dia",270),
+           
         ]
         cursor.executemany(
             "INSERT INTO servicios (nombre,duracion) VALUES (?,?)",
             servicios,
         )
+
+    servicios_extra = [
+        ("🚫 Permiso manicurista día completo", 540),
+        ("⏰ Permiso manicurista medio día", 270),
+    ]
+
+    for nombre_servicio, duracion_servicio in servicios_extra:
+        cursor.execute(
+            "SELECT id FROM servicios WHERE nombre=?",
+            (nombre_servicio,)
+        )
+
+        if not cursor.fetchone():
+            cursor.execute(
+                "INSERT INTO servicios (nombre, duracion) VALUES (?, ?)",
+                (nombre_servicio, duracion_servicio),
+            )
 
     cursor.execute("UPDATE citas SET duracion = 60 WHERE duracion IS NULL")
     db.commit()
