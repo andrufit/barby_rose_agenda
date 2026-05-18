@@ -32,17 +32,18 @@ DB_BACKEND = "postgres" if DATABASE_URL.startswith("postgres") else "sqlite"
 
 DIRECCION_NEGOCIO = os.environ.get(
     "DIRECCION_NEGOCIO",
-    "Barby Rose Nail Spa, Armenia, Quindio, Cr 15 4N # 55 (Barrio Nueva Cecilia)",
+    "Carrera 15 # 4N-55, barrio La Nueva Cecilia, zona norte de Armenia, Quindío",
 )
 MAPS_URL = os.environ.get(
     "MAPS_URL",
-    "https://maps.app.goo.gl/W8E5RV7LpcQbHDa2A",
+    "https://maps.app.goo.gl/hEWUU6vxNT15KAYo9",
 )
 
 TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID", "").strip()
 TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN", "").strip()
 TWILIO_WHATSAPP_FROM = os.environ.get("TWILIO_WHATSAPP_FROM", "").strip()
 TWILIO_CONTENT_SID_RECORDATORIO = os.environ.get("TWILIO_CONTENT_SID_RECORDATORIO", "").strip()
+TWILIO_CONTENT_SID_RECORDATORIO_24H = os.environ.get("TWILIO_CONTENT_SID_RECORDATORIO_24H", "").strip()
 
 
 class DBConnectionWrapper:
@@ -300,27 +301,104 @@ def enviar_template_whatsapp(telefono: str, variables: dict):
     if not TWILIO_WHATSAPP_FROM:
         return {"ok": False, "error": "Falta TWILIO_WHATSAPP_FROM"}
 
+    if not TWILIO_CONTENT_SID_RECORDATORIO:
+        return {"ok": False, "error": "Falta TWILIO_CONTENT_SID_RECORDATORIO"}
+
     try:
         client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
         msg = client.messages.create(
-    from_=TWILIO_WHATSAPP_FROM,
-    to=f"whatsapp:+{telefono}",
-    content_sid=TWILIO_CONTENT_SID_RECORDATORIO,
-    content_variables=json.dumps({
-        "1": variables.get("nombre", ""),
-        "2": variables.get("fecha", ""),
-        "3": variables.get("hora", ""),
-        "4": variables.get("servicio", ""),
-        "5": variables.get("empleada", ""),
-    })
-)
+            from_=TWILIO_WHATSAPP_FROM,
+            to=f"whatsapp:+{telefono}",
+            content_sid=TWILIO_CONTENT_SID_RECORDATORIO,
+            content_variables=json.dumps({
+                "1": variables.get("nombre", ""),
+                "2": variables.get("fecha", ""),
+                "3": variables.get("hora", ""),
+                "4": variables.get("servicio", ""),
+                "5": variables.get("empleada", ""),
+            }),
+        )
 
 
         return {"ok": True, "sid": msg.sid, "status": msg.status}
 
     except Exception as e:
         return {"ok": False, "error": str(e)}
+
+
+def enviar_recordatorio_24h_whatsapp(telefono: str, variables: dict):
+    telefono = limpiar_numero_whatsapp(telefono)
+
+    if not TWILIO_AVAILABLE or Client is None:
+        return {"ok": False, "error": "La libreria twilio no esta instalada"}
+
+    if not telefono:
+        return {"ok": False, "error": "Telefono invalido"}
+
+    if not TWILIO_ACCOUNT_SID or not TWILIO_AUTH_TOKEN:
+        return {"ok": False, "error": "Faltan credenciales de Twilio"}
+
+    if not TWILIO_WHATSAPP_FROM:
+        return {"ok": False, "error": "Falta TWILIO_WHATSAPP_FROM"}
+
+    if not TWILIO_CONTENT_SID_RECORDATORIO_24H:
+        return {"ok": False, "error": "Falta TWILIO_CONTENT_SID_RECORDATORIO_24H"}
+
+    try:
+        client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+
+        msg = client.messages.create(
+            from_=TWILIO_WHATSAPP_FROM,
+            to=f"whatsapp:+{telefono}",
+            content_sid=TWILIO_CONTENT_SID_RECORDATORIO_24H,
+            content_variables=json.dumps({
+                "1": variables.get("nombre", ""),
+                "2": variables.get("fecha", ""),
+                "3": variables.get("hora", ""),
+                "4": variables.get("servicio", ""),
+                "5": variables.get("empleada", ""),
+            }),
+        )
+
+        return {"ok": True, "sid": msg.sid, "status": msg.status}
+
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+def actualizar_estado_cita_por_telefono(cursor, telefono: str, estado: str) -> int:
+    telefono_objetivo = normalize_phone(telefono)
+    hoy = date.today().isoformat()
+
+    if not telefono_objetivo:
+        return 0
+
+    cursor.execute(
+        """
+        SELECT id, telefono
+        FROM citas
+        WHERE fecha >= ?
+        ORDER BY fecha, horario
+        """,
+        (hoy,),
+    )
+
+    citas = cursor.fetchall()
+    ids = [
+        cita["id"]
+        for cita in citas
+        if normalize_phone(cita["telefono"]) == telefono_objetivo
+    ]
+
+    for cita_id in ids:
+        cursor.execute(
+            "UPDATE citas SET estado=? WHERE id=?",
+            (estado, cita_id),
+        )
+
+    return len(ids)
+
 
 def init_db():
     db = get_db()
@@ -371,6 +449,8 @@ def init_db():
         )
         cursor.execute("ALTER TABLE citas ADD COLUMN IF NOT EXISTS duracion INTEGER DEFAULT 60")
         cursor.execute("ALTER TABLE citas ADD COLUMN IF NOT EXISTS telefono TEXT")
+        cursor.execute("ALTER TABLE citas ADD COLUMN IF NOT EXISTS estado TEXT DEFAULT 'pendiente'")
+        cursor.execute("ALTER TABLE citas ADD COLUMN IF NOT EXISTS recordatorio_24h_enviado INTEGER DEFAULT 0")
     else:
         cursor.execute(
             """
@@ -420,6 +500,10 @@ def init_db():
             cursor.execute("ALTER TABLE citas ADD COLUMN duracion INTEGER DEFAULT 60")
         if "telefono" not in columnas_citas:
             cursor.execute("ALTER TABLE citas ADD COLUMN telefono TEXT")
+        if "estado" not in columnas_citas:
+            cursor.execute("ALTER TABLE citas ADD COLUMN estado TEXT DEFAULT 'pendiente'")
+        if "recordatorio_24h_enviado" not in columnas_citas:
+            cursor.execute("ALTER TABLE citas ADD COLUMN recordatorio_24h_enviado INTEGER DEFAULT 0")
 
     cursor.execute("SELECT * FROM empleadas WHERE nombre=?", ("admin",))
     if not cursor.fetchone():
@@ -1216,8 +1300,11 @@ def test_whatsapp():
     resultado = enviar_template_whatsapp(
         "573214627686",
         {
-            "fecha": "12/1",
-            "hora": "3pm",
+            "nombre": "Oscar",
+            "fecha": "29/05/2026",
+            "hora": "3:00 PM",
+            "servicio": "Semi decorado",
+            "empleada": "Laura",
         },
     )
     return jsonify(resultado)
@@ -1231,14 +1318,90 @@ def logout():
 
 @app.route("/webhook_whatsapp", methods=["POST"])
 def webhook_whatsapp():
-
-    mensaje = request.form.get("Body", "")
-    telefono = request.form.get("From", "")
+    mensaje = request.form.get("Body", "").strip().lower()
+    telefono_twilio = request.form.get("From", "")
+    telefono = telefono_twilio.replace("whatsapp:+", "")
 
     print("Mensaje recibido:", telefono)
     print("Texto:", mensaje)
 
+    db = get_db()
+    cursor = db.cursor()
+
+    if mensaje in ["confirmo", "confirmada", "confirmar", "si", "sí", "ok", "listo"]:
+        actualizadas = actualizar_estado_cita_por_telefono(cursor, telefono, "confirmada")
+        db.commit()
+        print("Citas confirmadas:", actualizadas, "Telefono:", telefono)
+        return "OK", 200
+
+    if mensaje in ["cancelar", "cancelo", "cancelada", "no puedo", "no voy"]:
+        actualizadas = actualizar_estado_cita_por_telefono(cursor, telefono, "cancelada")
+        db.commit()
+        print("Citas canceladas:", actualizadas, "Telefono:", telefono)
+        return "OK", 200
+
     return "OK", 200
+
+
+@app.route("/enviar_recordatorios_24h")
+def enviar_recordatorios_24h():
+    fecha_manana = (date.today() + timedelta(days=1)).isoformat()
+
+    db = get_db()
+    cursor = db.cursor()
+
+    cursor.execute(
+        """
+        SELECT id, nombre, telefono, servicio, fecha, horario, empleada
+        FROM citas
+        WHERE fecha=?
+        AND COALESCE(recordatorio_24h_enviado, 0)=0
+        AND COALESCE(estado, 'pendiente') != 'cancelada'
+        ORDER BY horario
+        """,
+        (fecha_manana,),
+    )
+
+    citas = cursor.fetchall()
+    enviados = []
+    errores = []
+
+    for cita in citas:
+        resultado = enviar_recordatorio_24h_whatsapp(
+            cita["telefono"],
+            {
+                "nombre": cita["nombre"],
+                "fecha": cita["fecha"],
+                "hora": cita["horario"],
+                "servicio": cita["servicio"],
+                "empleada": cita["empleada"],
+            },
+        )
+
+        print("Recordatorio 24h:", cita["id"], resultado)
+
+        if resultado.get("ok"):
+            cursor.execute(
+                "UPDATE citas SET recordatorio_24h_enviado=1 WHERE id=?",
+                (cita["id"],),
+            )
+            enviados.append(cita["id"])
+        else:
+            errores.append({
+                "id": cita["id"],
+                "error": resultado.get("error", "Error desconocido"),
+            })
+
+    db.commit()
+
+    return jsonify({
+        "ok": True,
+        "fecha": fecha_manana,
+        "enviados": enviados,
+        "errores": errores,
+        "total_enviados": len(enviados),
+        "total_errores": len(errores),
+    })
 
 
 if __name__ == "__main__":
