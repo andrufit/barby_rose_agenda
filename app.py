@@ -304,10 +304,23 @@ def enviar_template_whatsapp(telefono: str, variables: dict):
         client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
         msg = client.messages.create(
-            from_=TWILIO_WHATSAPP_FROM,
-            to=f"whatsapp:+{telefono}",
-            body=f"Hola 👋 tu cita es el {variables.get('fecha')} a las {variables.get('hora')} 💅",
-        )
+    from_=TWILIO_WHATSAPP_FROM,
+    to=f"whatsapp:+{telefono}",
+    body=(
+        f"🌸 Hola {variables.get('nombre')} 🌸\n\n"
+        f"Tu cita en *Barby Rose Nail Spa* fue agendada exitosamente 💅\n\n"
+        f"📅 Fecha: {variables.get('fecha')}\n"
+        f"⏰ Hora: {variables.get('hora')}\n"
+        f"💖 Servicio: {variables.get('servicio')}\n"
+        f"💅 Manicurista: {variables.get('empleada')}\n\n"
+        "📍 Dirección:\n"
+        "Carrera 15 # 4N-55, en el barrio La Nueva Cecilia en la zona norte de Armenia, Quindío\n\n"
+        "🗺️ Ubicación:\n"
+        "https://maps.app.goo.gl/hEWUU6vxNT15KAYo9\n\n"
+        "Te esperamos ✨"
+    )
+)
+
 
         return {"ok": True, "sid": msg.sid, "status": msg.status}
 
