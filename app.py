@@ -1217,6 +1217,18 @@ def logout():
     return redirect(url_for("login"))
 
 
+@app.route("/webhook_whatsapp", methods=["POST"])
+def webhook_whatsapp():
+
+    mensaje = request.form.get("Body", "")
+    telefono = request.form.get("From", "")
+
+    print("Mensaje recibido:", telefono)
+    print("Texto:", mensaje)
+
+    return "OK", 200
+
+
 if __name__ == "__main__":
     with app.app_context():
         init_db()
