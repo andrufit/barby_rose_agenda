@@ -306,19 +306,14 @@ def enviar_template_whatsapp(telefono: str, variables: dict):
         msg = client.messages.create(
     from_=TWILIO_WHATSAPP_FROM,
     to=f"whatsapp:+{telefono}",
-    body=(
-        f"🌸 Hola {variables.get('nombre')} 🌸\n\n"
-        f"Tu cita en *Barby Rose Nail Spa* fue agendada exitosamente 💅\n\n"
-        f"📅 Fecha: {variables.get('fecha')}\n"
-        f"⏰ Hora: {variables.get('hora')}\n"
-        f"💖 Servicio: {variables.get('servicio')}\n"
-        f"💅 Manicurista: {variables.get('empleada')}\n\n"
-        "📍 Dirección:\n"
-        "Carrera 15 # 4N-55, en el barrio La Nueva Cecilia en la zona norte de Armenia, Quindío\n\n"
-        "🗺️ Ubicación:\n"
-        "https://maps.app.goo.gl/hEWUU6vxNT15KAYo9\n\n"
-        "Te esperamos ✨"
-    )
+    content_sid=TWILIO_CONTENT_SID_RECORDATORIO,
+    content_variables=json.dumps({
+        "1": variables.get("nombre", ""),
+        "2": variables.get("fecha", ""),
+        "3": variables.get("hora", ""),
+        "4": variables.get("servicio", ""),
+        "5": variables.get("empleada", ""),
+    })
 )
 
 
@@ -903,8 +898,12 @@ def agendar():
         resultado_twilio = enviar_template_whatsapp(
             telefono,
             {
-                "fecha": fecha,
-                "hora": horario,
+                
+                 "nombre": cliente,
+                 "fecha": fecha,
+                 "hora": horario,
+                 "servicio": nombre_servicio,
+                 "empleada": empleada,
             },
         )
 
